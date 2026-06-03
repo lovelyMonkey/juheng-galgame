@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>巨哼的五重身份 - H5 Story Demo v3</title>
+  <style>
+    :root {
+      --pink:#ff8fb7; --purple:#7460ff; --dark:#15131e;
+      --panel:rgba(24,20,34,.78); --text:#fff7fb; --muted:rgba(255,247,251,.74);
+      --green:#9fffd2; --gold:#ffd18a;
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    body{margin:0;height:100vh;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);background:radial-gradient(circle at 15% 10%,rgba(255,143,183,.28),transparent 30%),radial-gradient(circle at 85% 15%,rgba(116,96,255,.22),transparent 28%),linear-gradient(135deg,#20162d,#12121c 52%,#271326);overflow:hidden}
+    button{font-family:inherit;color:inherit;border:0;cursor:pointer}
+    .game{position:relative;width:100vw;height:100vh;overflow:hidden;isolation:isolate}
+    .scene-bg{position:absolute;inset:0;z-index:-2;background-size:cover;background-position:center;filter:blur(22px) saturate(1.18);transform:scale(1.12);opacity:.45;transition:background-image .5s,opacity .5s}
+    .vignette{position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(0,0,0,.52)),radial-gradient(circle at 50% 110%,rgba(255,143,183,.25),transparent 40%)}
+    .sparkles{position:absolute;inset:0;pointer-events:none;opacity:.38;background-image:radial-gradient(circle,rgba(255,255,255,.65) 0 1.3px,transparent 2px),radial-gradient(circle,rgba(255,214,231,.45) 0 1px,transparent 1.8px);background-size:100px 100px,145px 145px;animation:sparkle 12s linear infinite;z-index:0}
+    @keyframes sparkle{to{transform:translateY(-100px)}}
+    .topbar{position:absolute;z-index:20;top:max(14px,env(safe-area-inset-top));left:14px;right:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;pointer-events:none}
+    .pill,.tool-btn{pointer-events:auto;border:1px solid rgba(255,255,255,.18);background:rgba(14,12,22,.5);backdrop-filter:blur(16px);border-radius:999px;box-shadow:0 12px 36px rgba(0,0,0,.22)}
+    .pill{padding:10px 14px;font-size:13px;color:var(--muted);line-height:1.2;max-width:calc(100vw - 190px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pill strong{color:#fff;margin-right:6px}
+    .tools{display:flex;gap:8px;pointer-events:auto}.tool-btn{height:38px;padding:0 12px;font-size:13px;transition:.18s}.tool-btn:active{transform:scale(.94)}.tool-btn.active{background:rgba(255,143,183,.34)}
+    .stage{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;padding:70px 16px 238px}
+    .character-wrap{height:min(76vh,760px);width:min(94vw,560px);display:flex;justify-content:center;align-items:flex-end;transform:translateY(28px);filter:drop-shadow(0 24px 52px rgba(0,0,0,.42))}
+    .character-wrap.enter{animation:charEnter .55s cubic-bezier(.2,.9,.22,1) both}@keyframes charEnter{from{opacity:0;transform:translateY(58px) scale(.97);filter:blur(5px) drop-shadow(0 20px 40px rgba(0,0,0,.35))}to{opacity:1;transform:translateY(28px) scale(1);filter:blur(0) drop-shadow(0 24px 52px rgba(0,0,0,.42))}}
+    .character{max-height:100%;max-width:100%;object-fit:contain;user-select:none;pointer-events:none}
+    .dialogue-area{position:absolute;z-index:10;left:14px;right:14px;bottom:max(16px,env(safe-area-inset-bottom));max-width:980px;margin:0 auto}
+    .status-row{display:flex;gap:8px;margin:0 4px 10px;flex-wrap:wrap}.stat{font-size:12px;color:var(--muted);background:rgba(255,255,255,.11);border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:7px 10px;backdrop-filter:blur(14px)}
+    .dialogue{position:relative;min-height:165px;padding:18px;border-radius:24px;background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.04)),var(--panel);border:1px solid rgba(255,255,255,.18);box-shadow:0 22px 80px rgba(0,0,0,.38);backdrop-filter:blur(20px);overflow:hidden}
+    .dialogue:before{content:"";position:absolute;inset:0;background:linear-gradient(120deg,rgba(255,143,183,.2),transparent 35%,rgba(116,96,255,.15));pointer-events:none}
+    .speaker{position:relative;display:inline-flex;align-items:center;gap:8px;margin-bottom:10px;padding:7px 12px;border-radius:999px;background:rgba(255,143,183,.28);font-weight:700}.speaker:before{content:"";width:8px;height:8px;border-radius:50%;background:#fff;box-shadow:0 0 12px rgba(255,255,255,.8)}
+    .text{position:relative;min-height:78px;font-size:clamp(16px,3.8vw,20px);line-height:1.75;letter-spacing:.2px;white-space:pre-wrap;text-shadow:0 2px 12px rgba(0,0,0,.25)}
+    .hint{position:absolute;right:18px;bottom:12px;font-size:12px;color:rgba(255,255,255,.56);animation:blink 1.2s ease-in-out infinite}@keyframes blink{50%{opacity:.9}0%,100%{opacity:.25}}
+    .choices{display:grid;gap:10px;margin-top:12px}.choice{position:relative;width:100%;text-align:left;padding:14px 15px;border-radius:18px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(16px);box-shadow:0 12px 28px rgba(0,0,0,.2);opacity:0;transform:translateY(8px);animation:choiceIn .38s ease forwards;overflow:hidden}.choice:nth-child(2){animation-delay:.06s}.choice:nth-child(3){animation-delay:.12s}.choice:nth-child(4){animation-delay:.18s}.choice:hover{background:rgba(255,143,183,.24);transform:translateY(-1px)}.choice:active{transform:scale(.985)}@keyframes choiceIn{to{opacity:1;transform:translateY(0)}}
+    .fade{position:absolute;z-index:35;inset:0;background:#080710;opacity:0;pointer-events:none;transition:opacity .36s}.fade.show{opacity:1}
+    .modal{position:absolute;z-index:60;inset:0;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(9,7,14,.72);backdrop-filter:blur(16px)}.modal.show{display:flex;animation:fadeIn .3s both}@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    .box{width:min(92vw,660px);text-align:center;padding:28px 24px;border-radius:30px;background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.06)),rgba(25,20,35,.86);border:1px solid rgba(255,255,255,.18);box-shadow:0 26px 90px rgba(0,0,0,.42)}
+    .game-title{font-size:clamp(32px,8vw,56px);line-height:1.1;font-weight:900;margin:0 0 12px;background:linear-gradient(90deg,#fff,#ffd0df,#bfb5ff);-webkit-background-clip:text;color:transparent}.tagline{color:var(--muted);line-height:1.8;margin:0 auto 22px;max-width:540px}.actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}.primary,.secondary{min-width:130px;padding:13px 16px;border-radius:999px;font-weight:700;transition:.18s}.primary{background:linear-gradient(135deg,var(--pink),var(--purple));box-shadow:0 12px 30px rgba(255,143,183,.24)}.secondary{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18)}.primary:active,.secondary:active{transform:scale(.96)}
+    .toast{position:absolute;z-index:80;top:70px;left:50%;transform:translateX(-50%) translateY(-10px);padding:10px 14px;border-radius:999px;background:rgba(0,0,0,.58);border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(14px);opacity:0;pointer-events:none;transition:.25s;font-size:13px;white-space:nowrap}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    @media(min-width:760px){.stage{justify-content:flex-end;padding-right:9vw;padding-bottom:185px}.dialogue-area{left:34px;right:34px}.choices{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}.dialogue{min-height:178px}}
+    @media(max-height:680px){.stage{padding-bottom:180px}.character-wrap{height:66vh}.dialogue{min-height:138px;padding:14px}.text{font-size:15px;line-height:1.58}}
+  </style>
+</head>
+<body>
+<div class="game">
+  <div class="scene-bg" id="sceneBg"></div><div class="vignette"></div><div class="sparkles"></div>
+  <div class="topbar"><div class="pill"><strong>巨哼的五重身份</strong><span id="chapterName"></span></div><div class="tools"><button class="tool-btn" id="musicBtn">♪ OFF</button><button class="tool-btn" id="saveBtn">存档</button><button class="tool-btn" id="resetBtn">重置</button></div></div>
+  <div class="stage"><div class="character-wrap" id="charWrap"><img class="character" id="character" alt="巨哼"></div></div>
+  <div class="dialogue-area"><div class="status-row"><div class="stat">亲密度：<span id="love">0</span></div><div class="stat">理解度：<span id="understand">0</span></div><div class="stat">信任度：<span id="trust">0</span></div><div class="stat">结局/记忆：<span id="memoryCount">0</span></div></div><div class="dialogue" id="dialogue"><div class="speaker" id="speaker"></div><div class="text" id="text"></div><div class="hint" id="hint">点击继续</div></div><div class="choices" id="choices"></div></div>
+  <div class="fade" id="fade"></div>
+  <div class="modal show" id="startModal"><div class="box"><h1 class="game-title">巨哼的五重身份</h1><p class="tagline">v3 剧情数据外置版。三条路线均已扩展，并加入跨路线记忆与隐藏交叉入口。<br>建议使用本地服务打开，音乐与存档更稳定。</p><div class="actions"><button class="primary" id="newBtn">开始游戏</button><button class="secondary" id="loadBtn">读取存档</button><button class="secondary" id="musicStartBtn">开启音乐并开始</button></div></div></div>
+  <div class="modal" id="endModal"><div class="box"><h1 class="game-title" id="endTitle">Ending</h1><p class="tagline" id="endText"></p><div class="actions"><button class="primary" id="backStartBtn">回到分线选择</button><button class="secondary" id="restartBtn">重新开始</button></div></div></div>
+  <div class="toast" id="toast">已存档</div>
+  <audio id="bgm" loop preload="auto"></audio>
+</div>
+<script src="data/story.js"></script>
+<script>
+const SAVE_KEY="juheng_v3_save", MEMORY_KEY="juheng_v3_memory", MUSIC_KEY="juheng_v3_music";
+const STORY=window.STORY_DATA; const nodeMap=Object.fromEntries(STORY.nodes.map(n=>[n.id,n]));
+const $=id=>document.getElementById(id);
+const el={chapter:$("chapterName"),sceneBg:$("sceneBg"),charWrap:$("charWrap"),character:$("character"),speaker:$("speaker"),text:$("text"),hint:$("hint"),choices:$("choices"),dialogue:$("dialogue"),love:$("love"),understand:$("understand"),trust:$("trust"),memoryCount:$("memoryCount"),musicBtn:$("musicBtn"),saveBtn:$("saveBtn"),resetBtn:$("resetBtn"),fade:$("fade"),toast:$("toast"),bgm:$("bgm"),startModal:$("startModal"),endModal:$("endModal"),endTitle:$("endTitle"),endText:$("endText")};
+let state={scene:STORY.meta.start,love:0,understand:0,trust:0,flags:{},memory:{},musicOn:false,currentBgm:""};
+let typing=false,timer=null,fullText="",pendingNext=null;
+function loadMemory(){try{return JSON.parse(localStorage.getItem(MEMORY_KEY)||"{}")}catch{return {}}}
+function saveMemory(){localStorage.setItem(MEMORY_KEY,JSON.stringify(state.memory||{}))}
+function saveGame(silent=false){localStorage.setItem(SAVE_KEY,JSON.stringify({scene:state.scene,love:state.love,understand:state.understand,trust:state.trust,flags:state.flags}));localStorage.setItem(MUSIC_KEY,state.musicOn?"1":"0");if(!silent)toast("已存档")}
+function loadGame(){try{let d=JSON.parse(localStorage.getItem(SAVE_KEY)||"null");if(!d)return false;Object.assign(state,d);state.memory=loadMemory();return true}catch{return false}}
+function resetCurrent(){localStorage.removeItem(SAVE_KEY);state.scene=STORY.meta.start;state.love=0;state.understand=0;state.trust=0;state.flags={};toast("已重置当前进度");showScene(STORY.meta.start,true)}
+function addDelta(d={}){state.love=Math.max(0,state.love+(d.love||0));state.understand=Math.max(0,state.understand+(d.understand||0));state.trust=Math.max(0,state.trust+(d.trust||0))}
+function addSet(s={}){Object.assign(state.flags,s)}
+function addMemory(m={}){Object.assign(state.memory,m);saveMemory()}
+function goodCount(){return Object.keys(state.memory).filter(k=>/_good$/.test(k)).length}
+function checkReq(req){if(!req)return true;if(req.memory&&!state.memory[req.memory])return false;if(req.anyMemory&&!req.anyMemory.some(k=>state.memory[k]))return false;if(req.goodCount&&goodCount()<req.goodCount)return false;if(req.flag&&!state.flags[req.flag])return false;return true}
+function stats(){el.love.textContent=state.love;el.understand.textContent=state.understand;el.trust.textContent=state.trust;el.memoryCount.textContent=Object.keys(state.memory||{}).length}
+function toast(msg){el.toast.textContent=msg;el.toast.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>el.toast.classList.remove("show"),1500)}
+function setImage(key){let src=STORY.meta.assets.images[key]||STORY.meta.assets.images.lolita;if(el.character.src.endsWith(src))return;el.charWrap.classList.remove("enter");void el.charWrap.offsetWidth;el.character.src=src;el.sceneBg.style.backgroundImage=`url("${src}")`;el.charWrap.classList.add("enter")}
+async function setBgm(key){let src=STORY.meta.assets.bgm[key]||STORY.meta.assets.bgm.common;if(state.currentBgm===src)return;state.currentBgm=src;el.bgm.src=src;el.bgm.volume=.35;if(state.musicOn){try{await el.bgm.play()}catch{state.musicOn=false;musicBtn()}}}
+function musicBtn(){el.musicBtn.textContent=state.musicOn?"♪ ON":"♪ OFF";el.musicBtn.classList.toggle("active",state.musicOn)}
+async function toggleMusic(force=null){state.musicOn=force===null?!state.musicOn:!!force;musicBtn();localStorage.setItem(MUSIC_KEY,state.musicOn?"1":"0");if(state.musicOn){try{el.bgm.volume=.35;await el.bgm.play();toast("音乐已开启")}catch{state.musicOn=false;musicBtn();toast("请再点一次音乐按钮")}}else{el.bgm.pause();toast("音乐已关闭")}}
+function typeText(t){clearInterval(timer);typing=true;fullText=t;el.text.textContent="";el.hint.style.display="none";let i=0;timer=setInterval(()=>{i += /[，。！？\n]/.test(t[i]||"")?1:2;el.text.textContent=t.slice(0,i);if(i>=t.length){clearInterval(timer);typing=false;el.hint.style.display=pendingNext?"block":"none"}},24)}
+function skip(){if(!typing)return false;clearInterval(timer);el.text.textContent=fullText;typing=false;el.hint.style.display=pendingNext?"block":"none";return true}
+function showChoices(list=[]){el.choices.innerHTML="";list.filter(c=>checkReq(c.require)).forEach(c=>{let b=document.createElement("button");b.className="choice";b.textContent=c.text;b.onclick=()=>{if(typing){skip();return}addDelta(c.delta);addSet(c.set);stats();showScene(c.next)};el.choices.appendChild(b)})}
+function endScene(n){if(n.memory)addMemory(n.memory);stats();saveGame(true);el.endTitle.textContent=n.title||"Ending";el.endText.textContent=n.text;el.endModal.classList.add("show")}
+function transition(cb,instant=false){if(instant){cb();return}el.fade.classList.add("show");setTimeout(()=>{cb();el.fade.classList.remove("show")},210)}
+function showScene(id,instant=false){let n=nodeMap[id]||nodeMap[STORY.meta.start];if(n.ending){state.scene=id;endScene(n);return}transition(()=>{state.scene=id;if(n.delta)addDelta(n.delta);if(n.set)addSet(n.set);el.chapter.textContent=n.chapter||"";setImage(n.image||"lolita");setBgm(n.bgm||"common");el.speaker.textContent=n.speaker||"旁白";pendingNext=n.next||null;showChoices([]);typeText(n.text||"");if(n.choices){let wait=setInterval(()=>{if(!typing){clearInterval(wait);showChoices(n.choices)}},80)}stats();saveGame(true)},instant)}
+function continueText(){if(el.endModal.classList.contains("show"))return;if(skip())return;if(pendingNext){let n=pendingNext;pendingNext=null;showScene(n)}}
+el.dialogue.onclick=continueText;document.addEventListener("keydown",e=>{if(e.code==="Space"||e.code==="Enter"){e.preventDefault();continueText()}})
+el.musicBtn.onclick=()=>toggleMusic();el.saveBtn.onclick=()=>saveGame(false);el.resetBtn.onclick=resetCurrent;
+$("newBtn").onclick=()=>{el.startModal.classList.remove("show");showScene(STORY.meta.start,true)}
+$("loadBtn").onclick=()=>{let ok=loadGame();el.startModal.classList.remove("show");showScene(state.scene||STORY.meta.start,true);toast(ok?"已读取存档":"没有存档，开始新游戏")}
+$("musicStartBtn").onclick=async()=>{el.startModal.classList.remove("show");showScene(STORY.meta.start,true);await toggleMusic(true)}
+$("backStartBtn").onclick=()=>{el.endModal.classList.remove("show");state.scene=STORY.meta.start;showScene(STORY.meta.start)}
+$("restartBtn").onclick=()=>{el.endModal.classList.remove("show");resetCurrent()}
+state.memory=loadMemory();state.musicOn=localStorage.getItem(MUSIC_KEY)==="1";musicBtn();stats();setImage("lolita");setBgm("common");
+</script>
+</body>
+</html>
